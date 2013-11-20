@@ -37,13 +37,22 @@
 @class XSWindowController;
 @interface XSViewController : NSViewController
 
-@property(weak) XSViewController *parent;
-@property(weak) XSWindowController *windowController;
-@property(readonly,copy) NSMutableArray *children; // there's no mutableCopy keyword so this will be @synthesized in the implementation to get the default getter, but we'll write our own setter, otherwise mutability is lost
+@property (weak) XSViewController *parent;
+@property (weak, nonatomic) XSWindowController *windowController;
+@property (readonly,copy) NSMutableArray *children; // there's no mutableCopy keyword so this will be @synthesized in the implementation to get the default getter, but we'll write our own setter, otherwise mutability is lost
 
 /*!
- This is the NSViewController's designated initialiser, which we override to call our own.
- Any subclasses that call this will then set up our instance variables properly.
+ If returns YES then calling the NSViewController designated initialiser results in an exception.
+ Defaults to YES to retain compatibility with previous versions.
+ 
+ This can be set to NO to ease retro fitting to existing NSViewCOntroller subclasses.
+ The subclas will have to call setWindowController: before view controllers can be inserted into the responder chain.
+ */
++ (BOOL)raiseExceptionForDesignatedInitialiser;
++ (void)setRaiseExceptionForDesignatedInitialiser:(BOOL)value;
+
+/*!
+ Convenience initialiser. If +raiseExceptionForDesignatedInitialiser == YES then this method effectively becomes the designated initialiser.
  */
 - (id)initWithNibName:(NSString *)name bundle:(NSBundle *)bundle windowController:(XSWindowController *)windowController;
 

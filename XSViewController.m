@@ -33,6 +33,8 @@
 #import "XSViewController.h"
 #import "XSWindowController.h"
 
+static BOOL _raiseExceptionForDesignatedInitialiser = YES;
+
 #pragma mark Private API
 
 @interface XSViewController ()
@@ -52,33 +54,59 @@
 
 @implementation XSViewController
 
-#pragma mark Accessors
++ (BOOL)raiseExceptionForDesignatedInitialiser
+{
+    return _raiseExceptionForDesignatedInitialiser;
+}
 
-@synthesize parent = _parent;
-@synthesize windowController = _windowController;
-@synthesize children = _children;
++ (void)setRaiseExceptionForDesignatedInitialiser:(BOOL)value
+{
+    _raiseExceptionForDesignatedInitialiser = value;
+}
 
 #pragma mark Designated Initialiser
 
 - (id)initWithNibName:(NSString *)name bundle:(NSBundle *)bundle windowController:(XSWindowController *)windowController
 {
-	if (![super initWithNibName:name bundle:bundle])
-		return nil;
-	self.windowController = windowController; // non-retained to avoid retain cycles
-	self.children = [NSMutableArray array]; // set up a blank mutable array
+    self = [super initWithNibName:name bundle:bundle];
+    
+    if (self) {
+        [self setupInstance];
+        _windowController = windowController; // non-retained to avoid retain cycles
+    }
+    
 	return self;
 }
 
 
 - (id)initWithNibName:(NSString *)name bundle:(NSBundle *)bundle
 {
+    if ([[self class] raiseExceptionForDesignatedInitialiser]) {
+        @throw [NSException exceptionWithName:@"XSViewControllerException"
+                                       reason:@"An instance of an XSViewController concrete subclass was initialized using the NSViewController desigated initialiser method -initWithNibName:bundle: all view controllers in the ensuing tree will have no initial reference to an XSWindowController object and cannot be automatically added to the responder chain. To allow calling of the designated initialiser set +raiseExceptionForDesignatedInitialiser = NO."
+                                     userInfo:nil];    }
+         
     
-    @throw [NSException exceptionWithName:@"XSViewControllerException"
-                                   reason:@"An instance of an XSViewController concrete subclass was initialized using the NSViewController method -initWithNibName:bundle: all view controllers in the ensuing tree will have no reference to an XSWindowController object and cannot be automatically added to the responder chain"
-                                 userInfo:nil];
-	return nil;
+    self = [super initWithNibName:name bundle:bundle];
+    if (self) {
+        [self setupInstance];
+    }
+    
+	return self;
 }
 
+- (void)setupInstance
+{
+    self.children = [NSMutableArray array]; // set up a blank mutable array
+}
+
+#pragma mark Accessors
+
+- (void)setWindowController:(XSWindowController *)windowController
+{
+    _windowController = windowController;
+    [self patchResponderChain];
+}
 
 #pragma mark Indexed Accessors
 
@@ -105,26 +133,33 @@
 - (void)removeObjectFromChildrenAtIndex:(NSUInteger)index
 {
 	[self.children removeObjectAtIndex:index];
-	[(XSWindowController *)self.windowController patchResponderChain]; // each time a controller is removed then the repsonder chain needs fixing
+	[self patchResponderChain]; // each time a controller is removed then the repsonder chain needs fixing
 }
 
 - (void)insertObject:(XSViewController *)viewController inChildrenAtIndex:(NSUInteger)index
 {
 	[self.children insertObject:viewController atIndex:index];
 	[viewController setParent:self];
-	[self.windowController patchResponderChain];
+	[self patchResponderChain];
 }
 
 - (void)insertObjects:(NSArray *)viewControllers inChildrenAtIndexes:(NSIndexSet *)indexes
 {
 	[self.children insertObjects:viewControllers atIndexes:indexes];
 	[viewControllers makeObjectsPerformSelector:@selector(setParent:) withObject:self];
-	[self.windowController patchResponderChain]; 
+	[self patchResponderChain];
 }
 
 - (void)insertObjects:(NSArray *)viewControllers inChildrenAtIndex:(NSUInteger)index
 {
 	[self insertObjects:viewControllers inChildrenAtIndexes:[NSIndexSet indexSetWithIndex:index]];
+}
+
+# pragma mark Responder chain management
+
+- (void)patchResponderChain
+{
+    [self.windowController patchResponderChain];
 }
 
 # pragma mark Utilities
@@ -150,14 +185,17 @@
     
     // if this is nil then there is no parent, the whole system is based on the idea
     // that the top of the tree has nil parent, not the windowController as its parent.
-	while (root.parent)
+	while (root.parent) {
 		root = root.parent;
+    }
+    
 	return root;
 }
 
 - (NSArray *)descendants
 {
 	NSMutableArray *array = [NSMutableArray array];
+    
 	for (XSViewController *child in self.children) {
 		[array addObject:child];
 		if ([child countOfChildren] > 0)

@@ -36,11 +36,31 @@
 
 @interface XSWindowController : NSWindowController
 
-@property(nonatomic,copy,readonly)  NSMutableArray *viewControllers;
+/*!
+ The object that will serve as the root for building the patched responder chain.
+ This will generally either be the NSWindowController or NSWindow instances.
+ If set to an object other than either of the above than a warning is logged.
+ Defaults to self to maintain compatability with previous versions.
+ */
+@property (weak, nonatomic) NSResponder *responderChainPatchRoot;
+
+/*
+ The top level view controllers managed by this window.
+ */
+@property (nonatomic,copy,readonly)  NSMutableArray *viewControllers;
+
+/*
+ If YES then controllers are added to the responder chain starting with the furthest child.
+ IF NO then controllers are adde dto the responder chain starting with the top parent.
+ */
+@property BOOL addControllersToResponderChainInAscendingOrder;
 
 - (NSUInteger)countOfViewControllers;
 - (XSViewController *)objectInViewControllersAtIndex:(NSUInteger)index;
 
+/*!
+ Add a view controller to the controllers array.
+ */
 - (void)addViewController:(XSViewController *)viewController;
 - (void)insertObject:(XSViewController *)viewController inViewControllersAtIndex:(NSUInteger)index;
 - (void)insertObjects:(NSArray *)viewControllers inViewControllersAtIndexes:(NSIndexSet *)indexes;
@@ -61,4 +81,9 @@
  The last view controller in the array has nextResponder == nil.
  */
 - (void)patchResponderChain;
+
+/*!
+ Log the responder chain to the console.
+ */
+- (void)logResponderChain;
 @end

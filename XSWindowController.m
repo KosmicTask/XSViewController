@@ -33,6 +33,10 @@
 #import "XSWindowController.h"
 #import "XSViewController.h"
 
+@interface NSMutableArray(XSViewController)
+- (NSMutableArray *)xsv_reverse;
+@end
+
 @interface XSWindowController ()
 @property(nonatomic,copy) NSMutableArray *viewControllers;
 @end
@@ -44,9 +48,14 @@
 
 - (id)initWithWindowNibName:(NSString *)nibName
 {
-	if (![super initWithWindowNibName:nibName])
-		return nil;
-	self.viewControllers = [NSMutableArray array];
+    self = [super initWithWindowNibName:nibName];
+	
+    if (self) {
+        _viewControllers = [NSMutableArray array];
+        _addControllersToResponderChainInAscendingOrder = NO;   // Maintain compatibility with original implementation
+        _responderChainPatchRoot = self; // Maintain compatibility with original implementation
+    }
+    
 	return self;
 }
 
@@ -63,8 +72,10 @@
 
 - (void)setViewControllers:(NSMutableArray *)newViewControllers
 {
-	if (_viewControllers == newViewControllers)
+	if (_viewControllers == newViewControllers) {
 		return;
+    }
+    
 	NSMutableArray *newViewControllersCopy = [newViewControllers mutableCopy];
 	_viewControllers = newViewControllersCopy;
 }
@@ -117,6 +128,15 @@
 #pragma mark -
 #pragma mark Responder chain management
 
+- (void)setResponderChainPatchRoot:(NSResponder *)rootResponder
+{
+    _responderChainPatchRoot = rootResponder;
+    if (_responderChainPatchRoot != self && _responderChainPatchRoot != self.window) {
+        NSLog(@"The responder chain patch root has been set to an unanticipated object: %@", rootResponder);
+    }
+    [self patchResponderChain];
+}
+
 - (void)patchResponderChain
 {    
     // we're being called by view controllers at the beginning of creating the tree,
@@ -126,20 +146,67 @@
     }
     
 	NSMutableArray *flatViewControllers = [NSMutableArray array];
-	for (XSViewController *viewController in self.viewControllers) { // flatten the view controllers into an array
+    
+    // flatten the view controllers into an array
+	for (XSViewController *viewController in self.viewControllers) {
 		[flatViewControllers addObject:viewController];
 		[flatViewControllers addObjectsFromArray:[viewController descendants]];
 	}
-	
-    [self setNextResponder:[flatViewControllers objectAtIndex:0]];
+    
+    if (self.addControllersToResponderChainInAscendingOrder) {
+        flatViewControllers = [flatViewControllers xsv_reverse];
+    }
+    
+    [self.responderChainPatchRoot setNextResponder:[flatViewControllers objectAtIndex:0]];
 	
     NSUInteger index = 0;
 	NSUInteger viewControllerCount = [flatViewControllers count] - 1;
     
-    // set the next responder of each controller to the next, the last in the array has no next responder.
+    // Set the next responder of each controller to the next, the last in the array has no next responder.
+    XSViewController *nextViewController = nil;
 	for (index = 0; index < viewControllerCount ; index++) {
-		[[flatViewControllers objectAtIndex:index] setNextResponder:[flatViewControllers objectAtIndex:index + 1]];
+        nextViewController = [flatViewControllers objectAtIndex:index + 1];
+		[[flatViewControllers objectAtIndex:index] setNextResponder:nextViewController];
 	}
+    
+    // Append the window controller to the chain when building from the window
+    if (self.responderChainPatchRoot == self.window) {
+        nextViewController.nextResponder = self;
+    }
+}
+
+- (void)logResponderChain
+{
+    // Note that for events the responder chain naturally terminates with the window controller:
+    // NSView -> .. -> NSView -> NSWindow -> NSWindowController
+    //
+    // For action messages the chain is more elaborate, eg: document based app:
+    // NSView -> .. -> NSView -> NSWindow -> NSWindowController -> NSWindow delegate -> NSDocument -> NSApp -> AppDelegate -> NSDocumentController
+    //
+    // Notes:
+    // 1. The actually responders called will of course on the view controller hierarchy and its configuration.
+    // 2. This method generally reports an event style responder chain.
+    //
+    NSResponder *responder = [self.window firstResponder];
+    NSLog(@"First responder: %@", responder);
+    while ((responder = [responder nextResponder])) {
+        NSLog(@"%@ responder: %@", ([responder nextResponder] ? @"Next" : @"Last"), responder);
+    }
+}
+@end
+
+
+
+@implementation NSMutableArray(XSViewController)
+
+- (NSMutableArray *)xsv_reverse
+{
+    NSMutableArray *array = [NSMutableArray arrayWithCapacity:[self count]];
+    NSEnumerator *enumerator = [self reverseObjectEnumerator];
+    for (id element in enumerator) {
+        [array addObject:element];
+    }
+    return array;
 }
 
 @end
