@@ -1,3 +1,7 @@
+//
+//  XSWindowController.h
+//  View Controllers
+//
 //  Created by Jonathan Dann and Cathy Shive on 14/04/2008.
 //
 // Copyright (c) 2008 Jonathan Dann and Cathy Shive
@@ -26,4 +30,35 @@
 // If you use it, acknowledgement in an About Page or other appropriate place would be nice.
 // For example, "Contains "View Controllers" by Jonathan Dann and Cathy Shive" will do.
 
-Updated by Jonathan Mitchell 20/11/2013
+#import <Cocoa/Cocoa.h>
+
+@class XSViewController;
+
+@interface XSWindowController : NSWindowController
+
+@property(nonatomic,copy,readonly)  NSMutableArray *viewControllers;
+
+- (NSUInteger)countOfViewControllers;
+- (XSViewController *)objectInViewControllersAtIndex:(NSUInteger)index;
+
+- (void)addViewController:(XSViewController *)viewController;
+- (void)insertObject:(XSViewController *)viewController inViewControllersAtIndex:(NSUInteger)index;
+- (void)insertObjects:(NSArray *)viewControllers inViewControllersAtIndexes:(NSIndexSet *)indexes;
+- (void)insertObjects:(NSArray *)viewControllers inViewControllersAtIndex:(NSUInteger)index;
+
+/*!
+ 
+ It should be noted that if we remove an object from the view controllers
+ array then the whole tree that descends from it will go too.
+ 
+ */
+- (void)removeViewController:(XSViewController *)viewController;
+- (void)removeObjectFromViewControllersAtIndex:(NSUInteger)index;
+
+/*!
+ This method creates an array containing all the view controllers,
+ then adds them to the responder chain in sequence.
+ The last view controller in the array has nextResponder == nil.
+ */
+- (void)patchResponderChain;
+@end
