@@ -157,13 +157,13 @@
         flatViewControllers = [flatViewControllers xsv_reverse];
     }
     
-    [self.responderChainPatchRoot setNextResponder:[flatViewControllers objectAtIndex:0]];
+    XSViewController *nextViewController = [flatViewControllers objectAtIndex:0];
+    [self.responderChainPatchRoot setNextResponder:nextViewController];
 	
     NSUInteger index = 0;
 	NSUInteger viewControllerCount = [flatViewControllers count] - 1;
     
     // Set the next responder of each controller to the next, the last in the array has no next responder.
-    XSViewController *nextViewController = nil;
 	for (index = 0; index < viewControllerCount ; index++) {
         nextViewController = [flatViewControllers objectAtIndex:index + 1];
 		[[flatViewControllers objectAtIndex:index] setNextResponder:nextViewController];
@@ -171,6 +171,7 @@
     
     // Append the window controller to the chain when building from the window
     if (self.responderChainPatchRoot == self.window) {
+        NSAssert(nextViewController, @"Invalid view controller");
         nextViewController.nextResponder = self;
     }
 }
