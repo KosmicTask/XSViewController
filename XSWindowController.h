@@ -47,7 +47,7 @@
 /*
  The top level view controllers managed by this window.
  */
-@property (nonatomic,copy,readonly)  NSMutableArray *viewControllers;
+@property (nonatomic,copy,readonly)  NSMutableArray *respondingViewControllers;
 
 /*
  If YES then controllers are added to the responder chain starting with the furthest child.
@@ -55,14 +55,14 @@
  */
 @property BOOL addControllersToResponderChainInAscendingOrder;
 
-- (NSUInteger)countOfViewControllers;
-- (XSViewController *)objectInViewControllersAtIndex:(NSUInteger)index;
+- (NSUInteger)countOfRespondingViewControllers;
+- (XSViewController *)objectInRespondingViewControllersAtIndex:(NSUInteger)index;
 
 /*!
  Add a view controller to the controllers array.
  */
-- (void)addViewController:(XSViewController *)viewController;
-- (void)insertObject:(XSViewController *)viewController inViewControllersAtIndex:(NSUInteger)index;
+- (void)addRespondingViewController:(XSViewController *)viewController;
+- (void)insertObject:(XSViewController *)viewController inRespondingViewControllersAtIndex:(NSUInteger)index;
 - (void)insertObjects:(NSArray *)viewControllers inViewControllersAtIndexes:(NSIndexSet *)indexes;
 - (void)insertObjects:(NSArray *)viewControllers inViewControllersAtIndex:(NSUInteger)index;
 
@@ -72,8 +72,8 @@
  array then the whole tree that descends from it will go too.
  
  */
-- (void)removeViewController:(XSViewController *)viewController;
-- (void)removeObjectFromViewControllersAtIndex:(NSUInteger)index;
+- (void)removeRespondingViewController:(XSViewController *)viewController;
+- (void)removeObjectFromRespondingViewControllersAtIndex:(NSUInteger)index;
 
 /*!
  This method creates an array containing all the view controllers,

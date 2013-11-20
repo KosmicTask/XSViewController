@@ -46,7 +46,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = YES;
  setter could set all the required variables on the objects in the newChildren array, 
  but the API then becomes a little clunkier.
  */
-- (void)setChildren:(NSMutableArray *)newChildren;
+- (void)setRespondingChildren:(NSMutableArray *)newChildren;
 @end
 
 #pragma mark -
@@ -97,7 +97,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = YES;
 
 - (void)setupInstance
 {
-    self.children = [NSMutableArray array]; // set up a blank mutable array
+    self.respondingChildren = [NSMutableArray array]; // set up a blank mutable array
 }
 
 #pragma mark Accessors
@@ -110,49 +110,49 @@ static BOOL _raiseExceptionForDesignatedInitialiser = YES;
 
 #pragma mark Indexed Accessors
 
-- (NSUInteger)countOfChildren
+- (NSUInteger)countOfRespondingChildren
 {
-	return [self.children count];
+	return [self.respondingChildren count];
 }
 
-- (XSViewController *)objectInChildrenAtIndex:(NSUInteger)index
+- (XSViewController *)objectInRespondingChildrenAtIndex:(NSUInteger)index
 {
-	return [self.children objectAtIndex:index];
+	return [self.respondingChildren objectAtIndex:index];
 }
 
-- (void)addChild:(XSViewController *)viewController
+- (void)addRespondingChild:(XSViewController *)viewController
 {
-	[self insertObject:viewController inChildrenAtIndex:[self.children count]];
+	[self insertObject:viewController inRespondingChildrenAtIndex:[self.respondingChildren count]];
 }
 
-- (void)removeChild:(XSViewController *)viewController
+- (void)removeRespondingChild:(XSViewController *)viewController
 {
-	[self.children removeObject:viewController];
+	[self.respondingChildren removeObject:viewController];
 }
 
-- (void)removeObjectFromChildrenAtIndex:(NSUInteger)index
+- (void)removeObjectFromRespondingChildrenAtIndex:(NSUInteger)index
 {
-	[self.children removeObjectAtIndex:index];
+	[self.respondingChildren removeObjectAtIndex:index];
 	[self patchResponderChain]; // each time a controller is removed then the repsonder chain needs fixing
 }
 
-- (void)insertObject:(XSViewController *)viewController inChildrenAtIndex:(NSUInteger)index
+- (void)insertObject:(XSViewController *)viewController inRespondingChildrenAtIndex:(NSUInteger)index
 {
-	[self.children insertObject:viewController atIndex:index];
+	[self.respondingChildren insertObject:viewController atIndex:index];
 	[viewController setParent:self];
 	[self patchResponderChain];
 }
 
-- (void)insertObjects:(NSArray *)viewControllers inChildrenAtIndexes:(NSIndexSet *)indexes
+- (void)insertObjects:(NSArray *)viewControllers inRespondingChildrenAtIndexes:(NSIndexSet *)indexes
 {
-	[self.children insertObjects:viewControllers atIndexes:indexes];
+	[self.respondingChildren insertObjects:viewControllers atIndexes:indexes];
 	[viewControllers makeObjectsPerformSelector:@selector(setParent:) withObject:self];
 	[self patchResponderChain];
 }
 
-- (void)insertObjects:(NSArray *)viewControllers inChildrenAtIndex:(NSUInteger)index
+- (void)insertObjects:(NSArray *)viewControllers inRespondingChildrenAtIndex:(NSUInteger)index
 {
-	[self insertObjects:viewControllers inChildrenAtIndexes:[NSIndexSet indexSetWithIndex:index]];
+	[self insertObjects:viewControllers inRespondingChildrenAtIndexes:[NSIndexSet indexSetWithIndex:index]];
 }
 
 # pragma mark Responder chain management
@@ -164,14 +164,14 @@ static BOOL _raiseExceptionForDesignatedInitialiser = YES;
 
 # pragma mark Utilities
 
-- (void)setChildren:(NSMutableArray *)newChildren
+- (void)setRespondingChildren:(NSMutableArray *)newChildren
 {
-	if (_children == newChildren) {
+	if (_respondingChildren == newChildren) {
 		return;
     }
     
 	NSMutableArray *newChildrenCopy = [newChildren mutableCopy];
-	_children = newChildrenCopy;
+	_respondingChildren = newChildrenCopy;
 }
 
 - (XSViewController *)rootController
@@ -192,21 +192,21 @@ static BOOL _raiseExceptionForDesignatedInitialiser = YES;
 	return root;
 }
 
-- (NSArray *)descendants
+- (NSArray *)respondingDescendants
 {
 	NSMutableArray *array = [NSMutableArray array];
     
-	for (XSViewController *child in self.children) {
+	for (XSViewController *child in self.respondingChildren) {
 		[array addObject:child];
-		if ([child countOfChildren] > 0)
-			[array addObjectsFromArray:[child descendants]];
+		if ([child countOfRespondingChildren] > 0)
+			[array addObjectsFromArray:[child respondingDescendants]];
 	}
 	return [array copy]; // return an immutable array
 }
 
 - (void)removeObservations
 {
-	[self.children makeObjectsPerformSelector:@selector(removeObservations)];
+	[self.respondingChildren makeObjectsPerformSelector:@selector(removeObservations)];
 }
 
 @end

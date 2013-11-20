@@ -38,7 +38,7 @@
 @end
 
 @interface XSWindowController ()
-@property(nonatomic,copy) NSMutableArray *viewControllers;
+@property(nonatomic,copy) NSMutableArray *respondingViewControllers;
 @end
 
 @implementation XSWindowController
@@ -51,7 +51,7 @@
     self = [super initWithWindowNibName:nibName];
 	
     if (self) {
-        _viewControllers = [NSMutableArray array];
+        _respondingViewControllers = [NSMutableArray array];
         _addControllersToResponderChainInAscendingOrder = NO;   // Maintain compatibility with original implementation
         _responderChainPatchRoot = self; // Maintain compatibility with original implementation
     }
@@ -64,47 +64,47 @@
 
 - (void)windowWillClose:(NSNotification *)notification
 {
-	[self.viewControllers makeObjectsPerformSelector:@selector(removeObservations)];
+	[self.respondingViewControllers makeObjectsPerformSelector:@selector(removeObservations)];
 }
 
 #pragma mark -
 #pragma mark View controller management
 
-- (void)setViewControllers:(NSMutableArray *)newViewControllers
+- (void)setRespondingViewControllers:(NSMutableArray *)newViewControllers
 {
-	if (_viewControllers == newViewControllers) {
+	if (_respondingViewControllers == newViewControllers) {
 		return;
     }
     
 	NSMutableArray *newViewControllersCopy = [newViewControllers mutableCopy];
-	_viewControllers = newViewControllersCopy;
+	_respondingViewControllers = newViewControllersCopy;
 }
 
-- (NSUInteger)countOfViewControllers
+- (NSUInteger)countOfRespondingViewControllers
 {
-	return [self.viewControllers count];
+	return [self.respondingViewControllers count];
 }
 
-- (XSViewController *)objectInViewControllersAtIndex:(NSUInteger)index
+- (XSViewController *)objectInRespondingViewControllersAtIndex:(NSUInteger)index
 {
-	return [self.viewControllers objectAtIndex:index];
+	return [self.respondingViewControllers objectAtIndex:index];
 }
 
-- (void)addViewController:(XSViewController *)viewController
+- (void)addRespondingViewController:(XSViewController *)viewController
 {
-	[self.viewControllers insertObject:viewController atIndex:[self.viewControllers count]];
+	[self.respondingViewControllers insertObject:viewController atIndex:[self.respondingViewControllers count]];
 	[self patchResponderChain];
 }
 
-- (void)insertObject:(XSViewController *)viewController inViewControllersAtIndex:(NSUInteger)index
+- (void)insertObject:(XSViewController *)viewController inRespondingViewControllersAtIndex:(NSUInteger)index
 {
-	[self.viewControllers insertObject:viewController atIndex:index];
+	[self.respondingViewControllers insertObject:viewController atIndex:index];
 	[self patchResponderChain];
 }
 
 - (void)insertObjects:(NSArray *)viewControllers inViewControllersAtIndexes:(NSIndexSet *)indexes
 {
-	[self.viewControllers insertObjects:viewControllers atIndexes:indexes];
+	[self.respondingViewControllers insertObjects:viewControllers atIndexes:indexes];
 	[self patchResponderChain];
 }
 
@@ -113,15 +113,15 @@
 	[self insertObjects:viewControllers inViewControllersAtIndexes:[NSIndexSet indexSetWithIndex:index]];
 }
 
-- (void)removeViewController:(XSViewController *)viewController
+- (void)removeRespondingViewController:(XSViewController *)viewController
 {    
-	[self.viewControllers removeObject:viewController];
+	[self.respondingViewControllers removeObject:viewController];
 	[self patchResponderChain];
 }
 
-- (void)removeObjectFromViewControllersAtIndex:(NSUInteger)index
+- (void)removeObjectFromRespondingViewControllersAtIndex:(NSUInteger)index
 {
-	[self.viewControllers removeObjectAtIndex:index];
+	[self.respondingViewControllers removeObjectAtIndex:index];
 	[self patchResponderChain];
 }
 
@@ -141,16 +141,16 @@
 {    
     // we're being called by view controllers at the beginning of creating the tree,
     // most likely load time and the root of the tree hasn't been added to our list of controllers.
-	if ([self.viewControllers count] == 0) {
+	if ([self.respondingViewControllers count] == 0) {
 		return;
     }
     
 	NSMutableArray *flatViewControllers = [NSMutableArray array];
     
     // flatten the view controllers into an array
-	for (XSViewController *viewController in self.viewControllers) {
+	for (XSViewController *viewController in self.respondingViewControllers) {
 		[flatViewControllers addObject:viewController];
-		[flatViewControllers addObjectsFromArray:[viewController descendants]];
+		[flatViewControllers addObjectsFromArray:[viewController respondingDescendants]];
 	}
     
     if (self.addControllersToResponderChainInAscendingOrder) {

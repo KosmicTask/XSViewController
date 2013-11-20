@@ -39,7 +39,7 @@
 
 @property (weak) XSViewController *parent;
 @property (weak, nonatomic) XSWindowController *windowController;
-@property (readonly,copy) NSMutableArray *children; // there's no mutableCopy keyword so this will be @synthesized in the implementation to get the default getter, but we'll write our own setter, otherwise mutability is lost
+@property (readonly,copy) NSMutableArray *respondingChildren; // there's no mutableCopy keyword so this will be @synthesized in the implementation to get the default getter, but we'll write our own setter, otherwise mutability is lost
 
 /*!
  If returns YES then calling the NSViewController designated initialiser results in an exception.
@@ -56,19 +56,19 @@
  */
 - (id)initWithNibName:(NSString *)name bundle:(NSBundle *)bundle windowController:(XSWindowController *)windowController;
 
-- (NSUInteger)countOfChildren;
-- (XSViewController *)objectInChildrenAtIndex:(NSUInteger)index;
+- (NSUInteger)countOfRespondingChildren;
+- (XSViewController *)objectInRespondingChildrenAtIndex:(NSUInteger)index;
 
 /*!
  This will add a new XSViewController subclass to the end of the children array.
 */
-- (void)addChild:(XSViewController *)viewController;
-- (void)insertObject:(XSViewController *)viewController inChildrenAtIndex:(NSUInteger)index;
-- (void)insertObjects:(NSArray *)viewControllers inChildrenAtIndexes:(NSIndexSet *)indexes;
-- (void)insertObjects:(NSArray *)viewControllers inChildrenAtIndex:(NSUInteger)index;
+- (void)addRespondingChild:(XSViewController *)viewController;
+- (void)insertObject:(XSViewController *)viewController inRespondingChildrenAtIndex:(NSUInteger)index;
+- (void)insertObjects:(NSArray *)viewControllers inRespondingChildrenAtIndexes:(NSIndexSet *)indexes;
+- (void)insertObjects:(NSArray *)viewControllers inRespondingChildrenAtIndex:(NSUInteger)index;
 
-- (void)removeChild:(XSViewController *)viewController;
-- (void)removeObjectFromChildrenAtIndex:(NSUInteger)index;
+- (void)removeRespondingChild:(XSViewController *)viewController;
+- (void)removeObjectFromRespondingChildrenAtIndex:(NSUInteger)index;
 
 /*!
  This method is not used in the example but does demonstrates an important 
@@ -86,7 +86,7 @@
  of a folder to the array (ad infinitum) to the array before moving on to the 
  next folder at the same level
 */
-- (NSArray *)descendants;
+- (NSArray *)respondingDescendants;
 
 /*!
  Any manual KVO or bindings that you have set up (other than to the representedObject) 
