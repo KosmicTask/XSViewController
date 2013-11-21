@@ -5,6 +5,7 @@
 //  Created by Jonathan Dann and Cathy Shive on 14/04/2008.
 //
 // Copyright (c) 2008 Jonathan Dann and Cathy Shive
+// Copyright (c) 2013 Jonathan Mitchell
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -37,10 +38,16 @@
 @interface XSWindowController : NSWindowController
 
 /*!
+ 
  The object that will serve as the root for building the patched responder chain.
- This will generally either be the NSWindowController or NSWindow instances.
- If set to an object other than either of the above than a warning is logged.
- Defaults to self to maintain compatability with previous versions.
+ This will generally either be the NSWindowController or NSWindow instances or nil (default).
+ If set to an object other than any of the above than a warning is logged.
+ 
+ If the property value is nil then responder patching begins at the window rathe than the window controller.
+ 
+ Defaults to nil even though this breaks compatibility with previous versions.
+ To me it seems more logical to have the window controller queried after its child view controllers.
+ 
  */
 @property (weak, nonatomic) NSResponder *responderChainPatchRoot;
 
@@ -51,7 +58,12 @@
 
 /*
  If YES then controllers are added to the responder chain starting with the furthest child.
- IF NO then controllers are adde dto the responder chain starting with the top parent.
+ IF NO then controllers are added to the responder chain starting with the top parent.
+ 
+ Defaults to YES even though this breaks compatibility with the original version.
+ Searching up through the view controllers in the same order as the views that
+ they manage seems to make more sense to me.
+ 
  */
 @property BOOL addControllersToResponderChainInAscendingOrder;
 

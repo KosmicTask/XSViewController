@@ -5,6 +5,7 @@
 //  Created by Jonathan Dann and Cathy Shive on 14/04/2008.
 //
 // Copyright (c) 2008 Jonathan Dann and Cathy Shive
+// Copyright (c) 2013 Jonathan Mitchell
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -47,6 +48,8 @@
 
 @implementation XSWindowController
 
+@synthesize responderChainPatchRoot = _responderChainPatchRoot;
+
 #pragma mark -
 #pragma mark Setup
 
@@ -56,8 +59,7 @@
 	
     if (self) {
         _respondingViewControllers = [NSMutableArray array];
-        _addControllersToResponderChainInAscendingOrder = NO;   // Maintain compatibility with original implementation
-        _responderChainPatchRoot = self; // Maintain compatibility with original implementation
+        _addControllersToResponderChainInAscendingOrder = YES;
     }
     
 	return self;
@@ -69,6 +71,12 @@
 - (void)windowWillClose:(NSNotification *)notification
 {
 	[self.respondingViewControllers makeObjectsPerformSelector:@selector(removeObservations)];
+}
+
+- (void)windowDidLoad
+{
+    [super windowDidLoad];
+    [self patchResponderChain];
 }
 
 #pragma mark -
@@ -157,10 +165,20 @@
 - (void)setResponderChainPatchRoot:(NSResponder *)rootResponder
 {
     _responderChainPatchRoot = rootResponder;
-    if (_responderChainPatchRoot != self && _responderChainPatchRoot != self.window) {
+    if (_responderChainPatchRoot != self && _responderChainPatchRoot != self.window && _responderChainPatchRoot != nil) {
         NSLog(@"The responder chain patch root has been set to an unanticipated object: %@", rootResponder);
     }
     [self patchResponderChain];
+}
+
+- (NSResponder *)responderChainPatchRoot
+{
+    // Default to patching from the window
+    if (!_responderChainPatchRoot) {
+        return [self window];
+    }
+    
+    return _responderChainPatchRoot;
 }
 
 - (void)patchResponderChain

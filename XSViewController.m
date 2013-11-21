@@ -5,6 +5,7 @@
 //  Created by Jonathan Dann and Cathy Shive on 14/04/2008.
 //
 // Copyright (c) 2008 Jonathan Dann and Cathy Shive
+// Copyright (c) 2013 Jonathan Mitchell
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -33,7 +34,7 @@
 #import "XSViewController.h"
 #import "XSWindowController.h"
 
-static BOOL _raiseExceptionForDesignatedInitialiser = YES;
+static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 
 #pragma mark Private API
 
@@ -57,6 +58,8 @@ static BOOL _raiseExceptionForDesignatedInitialiser = YES;
 #pragma mark Public API
 
 @implementation XSViewController
+
+@synthesize windowController = _windowController;
 
 + (BOOL)raiseExceptionForDesignatedInitialiser
 {
@@ -86,10 +89,12 @@ static BOOL _raiseExceptionForDesignatedInitialiser = YES;
 - (id)initWithNibName:(NSString *)name bundle:(NSBundle *)bundle
 {
     if ([[self class] raiseExceptionForDesignatedInitialiser]) {
+        
+        // Legacy support only!
         @throw [NSException exceptionWithName:@"XSViewControllerException"
-                                       reason:@"An instance of an XSViewController concrete subclass was initialized using the NSViewController desigated initialiser method -initWithNibName:bundle: all view controllers in the ensuing tree will have no initial reference to an XSWindowController object and cannot be automatically added to the responder chain. To allow calling of the designated initialiser set +raiseExceptionForDesignatedInitialiser = NO."
-                                     userInfo:nil];    }
-         
+                                       reason:@"An instance of an XSViewController concrete subclass was initialized using the NSViewController desigated initialiser method -initWithNibName:bundle: all view controllers in the ensuing tree will have no initial reference to an XSWindowController object however they may easily obtain one subsequently!. To allow calling of the designated initialiser set +raiseExceptionForDesignatedInitialiser = NO."
+                                     userInfo:nil];
+    }
     
     self = [super initWithNibName:name bundle:bundle];
     if (self) {
@@ -101,17 +106,37 @@ static BOOL _raiseExceptionForDesignatedInitialiser = YES;
 
 - (void)setupInstance
 {
-    self.respondingChildren = [NSMutableArray array]; // set up a blank mutable array
+    _respondingChildren = [NSMutableArray array]; // set up a blank mutable array
+    _alwaysQueryRootControllerForWindowController = NO;
 }
 
 #pragma mark Accessors
 
-- (void)setWindowController:(XSWindowController *)windowController
+- (void)setWindowController:(XSWindowController *)controller
 {
-    _windowController = windowController;
+    _windowController = controller;
     [self patchResponderChain];
 }
 
+- (XSWindowController *)windowController
+{
+    XSWindowController *controller = nil;
+    
+    if (_windowController && !self.alwaysQueryRootControllerForWindowController) {
+        controller = _windowController;
+    } else if (self.parent) {
+        
+        // If no local controller instance available then query the root
+        controller = [self.rootController windowController];
+        
+        // Cache the window controller if dynamic querying not required
+        if (controller && !self.alwaysQueryRootControllerForWindowController) {
+            _windowController = controller;
+        }
+    }
+    
+    return controller;
+}
 #pragma mark Indexed Accessors
 
 - (NSUInteger)countOfRespondingChildren
@@ -166,6 +191,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = YES;
 
 - (void)configureViewController:(XSViewController *)viewController
 {
+    // Assign the window controller if available
     if (viewController.windowController != self.windowController) {
         viewController.windowController = self.windowController;
     }

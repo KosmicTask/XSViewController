@@ -5,6 +5,7 @@
 //  Created by Jonathan Dann and Cathy Shive on 14/04/2008.
 //
 // Copyright (c) 2008 Jonathan Dann and Cathy Shive
+// Copyright (c) 2013 Jonathan Mitchell
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -38,15 +39,35 @@
 @interface XSViewController : NSViewController
 
 @property (weak) XSViewController *parent;
+
+/*!
+ 
+ The windowController property must resolve to an instance of XSWindowController in order for
+ controllers to be patched into the responder chain.
+ 
+ This property can be set explicitly during initialisation or later.
+ Alternatively the property will be set automatically when it is added as a child responder.
+ 
+ Commonly view controllers are instantiated in -awakeFromNib and may have no access to a window.
+ If a given view controller has a nil -windowController then it requests the root controllers -windowController instance.
+ 
+ Therefore, any given tree of controllers will be patched into the responder chain as long as the root controller
+ has a valid window controller reference.
+ 
+ */
 @property (weak, nonatomic) XSWindowController *windowController;
+
+
+@property BOOL alwaysQueryRootControllerForWindowController;
+
 @property (readonly,copy) NSMutableArray *respondingChildren; // there's no mutableCopy keyword so this will be @synthesized in the implementation to get the default getter, but we'll write our own setter, otherwise mutability is lost
 
 /*!
  If returns YES then calling the NSViewController designated initialiser results in an exception.
- Defaults to YES to retain compatibility with previous versions.
+ Defaults to NO even though this will break compatibility with previous versions.
  
- This can be set to NO to ease retro fitting to existing NSViewCOntroller subclasses.
- The subclas will have to call setWindowController: before view controllers can be inserted into the responder chain.
+ The default setting of NO eases retro fitting to existing NSViewController subclasses.
+ - windowController: will be resolved when adding the controller as a child either to XSWindowController or XVViewController or dynamically when required.
  */
 + (BOOL)raiseExceptionForDesignatedInitialiser;
 + (void)setRaiseExceptionForDesignatedInitialiser:(BOOL)value;
@@ -61,6 +82,9 @@
 
 /*!
  This will add a new XSViewController subclass to the end of the children array.
+ 
+ In all methods that add child view controllers the added controllers will have their -windowController set to match the parents windowcontroller.
+ This largely removes the necessity of manually managing this property at initialisation or elsewhere.
 */
 - (void)addRespondingChild:(XSViewController *)viewController;
 - (void)insertObject:(XSViewController *)viewController inRespondingChildrenAtIndex:(NSUInteger)index;
