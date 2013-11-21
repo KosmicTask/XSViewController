@@ -163,7 +163,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 - (void)removeObjectFromRespondingChildrenAtIndex:(NSUInteger)index
 {
 	[self.respondingChildren removeObjectAtIndex:index];
-	[self patchResponderChain]; // each time a controller is removed then the repsonder chain needs fixing
+	[self patchResponderChain];
 }
 
 - (void)insertObject:(XSViewController *)viewController inRespondingChildrenAtIndex:(NSUInteger)index
@@ -191,8 +191,8 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 
 - (void)configureViewController:(XSViewController *)viewController
 {
-    // Assign the window controller if available
-    if (viewController.windowController != self.windowController) {
+    // Assign the window controller if available and dynamic window controller resolution is off
+    if (viewController.windowController != self.windowController && !self.alwaysQueryRootControllerForWindowController) {
         viewController.windowController = self.windowController;
     }
 }
