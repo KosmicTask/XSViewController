@@ -39,6 +39,10 @@
 
 @interface XSWindowController ()
 @property(nonatomic,copy) NSMutableArray *respondingViewControllers;
+
+- (void)configureViewController:(XSViewController *)viewController;
+- (void)configureViewControllers:(NSArray *)viewControllers;
+
 @end
 
 @implementation XSWindowController
@@ -92,24 +96,28 @@
 
 - (void)addRespondingViewController:(XSViewController *)viewController
 {
+    [self configureViewController:viewController];
 	[self.respondingViewControllers insertObject:viewController atIndex:[self.respondingViewControllers count]];
 	[self patchResponderChain];
 }
 
 - (void)insertObject:(XSViewController *)viewController inRespondingViewControllersAtIndex:(NSUInteger)index
 {
+    [self configureViewController:viewController];
 	[self.respondingViewControllers insertObject:viewController atIndex:index];
 	[self patchResponderChain];
 }
 
 - (void)insertObjects:(NSArray *)viewControllers inViewControllersAtIndexes:(NSIndexSet *)indexes
 {
+    [self configureViewControllers:viewControllers];
 	[self.respondingViewControllers insertObjects:viewControllers atIndexes:indexes];
 	[self patchResponderChain];
 }
 
 - (void)insertObjects:(NSArray *)viewControllers inViewControllersAtIndex:(NSUInteger)index
 {
+    [self configureViewControllers:viewControllers];
 	[self insertObjects:viewControllers inViewControllersAtIndexes:[NSIndexSet indexSetWithIndex:index]];
 }
 
@@ -123,6 +131,24 @@
 {
 	[self.respondingViewControllers removeObjectAtIndex:index];
 	[self patchResponderChain];
+}
+
+#pragma mark -
+#pragma mark View controller configuration
+
+- (void)configureViewController:(XSViewController *)viewController
+{
+    NSAssert([viewController isKindOfClass:[XSViewController class]], @"Invalid view controller class");
+    if (viewController.windowController != self) {
+        viewController.windowController = self;
+    }
+}
+
+- (void)configureViewControllers:(NSArray *)viewControllers
+{
+    for (XSViewController *viewController in viewControllers) {
+        [self configureViewController:viewController];
+    }
 }
 
 #pragma mark -
@@ -153,17 +179,19 @@
 		[flatViewControllers addObjectsFromArray:[viewController respondingDescendants]];
 	}
     
+    // reverse the order to build from the children up
     if (self.addControllersToResponderChainInAscendingOrder) {
         flatViewControllers = [flatViewControllers xsv_reverse];
     }
     
+    // start building from the patch root
     XSViewController *nextViewController = [flatViewControllers objectAtIndex:0];
     [self.responderChainPatchRoot setNextResponder:nextViewController];
 	
     NSUInteger index = 0;
 	NSUInteger viewControllerCount = [flatViewControllers count] - 1;
     
-    // Set the next responder of each controller to the next, the last in the array has no next responder.
+    // Set the next responder of each controller to the next, the last in the array has no default next responder.
 	for (index = 0; index < viewControllerCount ; index++) {
         nextViewController = [flatViewControllers objectAtIndex:index + 1];
 		[[flatViewControllers objectAtIndex:index] setNextResponder:nextViewController];

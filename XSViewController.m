@@ -47,6 +47,10 @@ static BOOL _raiseExceptionForDesignatedInitialiser = YES;
  but the API then becomes a little clunkier.
  */
 - (void)setRespondingChildren:(NSMutableArray *)newChildren;
+
+- (void)configureViewController:(XSViewController *)viewController;
+- (void)configureViewControllers:(NSArray *)viewControllers;
+
 @end
 
 #pragma mark -
@@ -122,6 +126,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = YES;
 
 - (void)addRespondingChild:(XSViewController *)viewController
 {
+    [self configureViewController:viewController];
 	[self insertObject:viewController inRespondingChildrenAtIndex:[self.respondingChildren count]];
 }
 
@@ -138,6 +143,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = YES;
 
 - (void)insertObject:(XSViewController *)viewController inRespondingChildrenAtIndex:(NSUInteger)index
 {
+    [self configureViewController:viewController];
 	[self.respondingChildren insertObject:viewController atIndex:index];
 	[viewController setParent:self];
 	[self patchResponderChain];
@@ -145,6 +151,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = YES;
 
 - (void)insertObjects:(NSArray *)viewControllers inRespondingChildrenAtIndexes:(NSIndexSet *)indexes
 {
+    [self configureViewControllers:viewControllers];
 	[self.respondingChildren insertObjects:viewControllers atIndexes:indexes];
 	[viewControllers makeObjectsPerformSelector:@selector(setParent:) withObject:self];
 	[self patchResponderChain];
@@ -153,6 +160,22 @@ static BOOL _raiseExceptionForDesignatedInitialiser = YES;
 - (void)insertObjects:(NSArray *)viewControllers inRespondingChildrenAtIndex:(NSUInteger)index
 {
 	[self insertObjects:viewControllers inRespondingChildrenAtIndexes:[NSIndexSet indexSetWithIndex:index]];
+}
+
+# pragma mark View controller configuration
+
+- (void)configureViewController:(XSViewController *)viewController
+{
+    if (viewController.windowController != self.windowController) {
+        viewController.windowController = self.windowController;
+    }
+}
+
+- (void)configureViewControllers:(NSArray *)viewControllers
+{
+    for (XSViewController *viewController in viewControllers) {
+        [self configureViewController:viewController];
+    }
 }
 
 # pragma mark Responder chain management
