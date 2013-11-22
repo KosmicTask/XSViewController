@@ -1,7 +1,7 @@
 XSViewController
 ================
 
-A Cocoa view controller subclass that includes responder chain patching when used in conjunction with XSWindowController.
+A Cocoa view controller subclass that implements responder chain patching when used in conjunction with XSWindowController.
 
 This is a reboot of the original implementation ([zip][1]). The original functionality has been retained but the API has been updated.
 
@@ -19,7 +19,7 @@ Usage is a three step process:
 
 1. Instantiate an `XSWindowController` (or a subclass thereof).
 2. Add `XSViewController` children to the `XSWindowController` instance.
-3. Add `further XSViewController` children to `XSViewController`instances.
+3. Add further `XSViewController` children to `XSViewController`instances.
 
 As the `XSViewController` children are manipulated they will be added and removed from the responder chain as long as at least the topmost `XSViewController` instance in any given tree has an assigned window controller.
 
