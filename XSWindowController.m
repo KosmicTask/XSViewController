@@ -217,7 +217,6 @@
     
     // Append the window controller to the chain when building from the window
     if (self.responderChainPatchRoot == self.window) {
-        NSAssert(nextViewController, @"Invalid view controller");
         nextViewController.nextResponder = self;
     }
 }
