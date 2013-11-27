@@ -1,7 +1,12 @@
 XSViewController
 ================
 
-A Cocoa view controller subclass that implements responder chain patching when used in conjunction with XSWindowController.
+A Cocoa view controller subclass that implements responder chain patching when used in conjunction with `XSWindowController`.
+
+Also includes:
+
+- `NSResponder+XSViewController` : Responder chain category
+
 
 This is a reboot of the original implementation ([zip][1]). The original functionality has been retained but the API has been updated.
 
@@ -10,7 +15,7 @@ Build Requirements
 
 OS X 64 bit ARC.
 
-How to use it
+Using XSViewController
 =============
 
 Read the legacy articles below for guidance then read the header file notes.
@@ -35,6 +40,13 @@ Note that this reboot modifies the default behaviour of the original implementat
 
 	// Add controllers in descending order - that is starting with the root rather than the children
 	winController.addControllersToResponderChainInAscendingOrder = NO;
+
+Using NSResponder+XSViewController
+================
+
+The various `NSResponder` category methods such as `- xsv_actionResponderChainFromSelf` return arrays of objects sorted in the order in which they occur in the responder chain. Both action and event responder chains can be requested.
+
+The constructed responder chains should confirm to the chains discussed in the Apple [Responder Chain info](https://developer.apple.com/library/mac/documentation/cocoa/conceptual/eventoverview/EventArchitecture/EventArchitecture.html#//apple_ref/doc/uid/10000060i-CH3-SW2).
 
 Legacy Articles
 ===============
