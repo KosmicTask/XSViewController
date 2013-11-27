@@ -183,26 +183,16 @@
 
 - (void)patchResponderChain
 {    
-    // we're being called by view controllers at the beginning of creating the tree,
+    // We are being called by view controllers at the beginning of creating the tree,
     // most likely load time and the root of the tree hasn't been added to our list of controllers.
 	if ([self.respondingViewControllers count] == 0) {
 		return;
     }
     
-	NSMutableArray *flatViewControllers = [NSMutableArray array];
+    // Get the responders
+	NSArray *flatViewControllers = [self respondingDescendants];
     
-    // flatten the view controllers into an array
-	for (XSViewController *viewController in self.respondingViewControllers) {
-		[flatViewControllers addObject:viewController];
-		[flatViewControllers addObjectsFromArray:[viewController respondingDescendants]];
-	}
-    
-    // reverse the order to build from the children up
-    if (self.addControllersToResponderChainInAscendingOrder) {
-        flatViewControllers = [flatViewControllers xsv_reverse];
-    }
-    
-    // start building from the patch root
+    // Start building from the patch root
     XSViewController *nextViewController = [flatViewControllers objectAtIndex:0];
     [self.responderChainPatchRoot setNextResponder:nextViewController];
 	
@@ -219,6 +209,25 @@
     if (self.responderChainPatchRoot == self.window) {
         nextViewController.nextResponder = self;
     }
+}
+
+- (NSArray *)respondingDescendants
+{
+    NSMutableArray *flatViewControllers = [NSMutableArray array];
+    
+    // flatten the view controllers into an array
+	for (XSViewController *viewController in self.respondingViewControllers) {
+		[flatViewControllers addObject:viewController];
+		[flatViewControllers addObjectsFromArray:[viewController respondingDescendants]];
+	}
+    
+    // reverse the order to build from the children up
+    if (self.addControllersToResponderChainInAscendingOrder) {
+        flatViewControllers = [flatViewControllers xsv_reverse];
+    }
+
+    // Yes, it's mutable, but callers should respect the return type
+    return flatViewControllers;
 }
 
 - (void)logResponderChain
