@@ -85,8 +85,22 @@
  
  In all methods that add child view controllers the added controllers will have their -windowController set to match the parents windowcontroller.
  This largely removes the necessity of manually managing this property at initialisation or elsewhere.
-*/
+
+ NOTE:
+ An action will potentially be sent to each responding sibling of the receiver.
+ The receiver will not necessarily receive the action first.
+ 
+ This behavior is powerful but can make figuring out which object will respond to an action difficult.
+ In general then
+ 
+ */
 - (void)addRespondingChild:(XSViewController *)viewController;
+
+/*
+ 
+ Object management
+ 
+ */
 - (void)insertObject:(XSViewController *)viewController inRespondingChildrenAtIndex:(NSUInteger)index;
 - (void)insertObjects:(NSArray *)viewControllers inRespondingChildrenAtIndexes:(NSIndexSet *)indexes;
 - (void)insertObjects:(NSArray *)viewControllers inRespondingChildrenAtIndex:(NSUInteger)index;
