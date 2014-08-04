@@ -156,7 +156,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
         return;
     }
     
-    [self configureViewController:viewController];
+    //[self configureViewController:viewController];
 	[self insertObject:viewController inRespondingChildrenAtIndex:[self.respondingChildren count]];
 }
 
