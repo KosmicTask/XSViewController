@@ -151,6 +151,11 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 
 - (void)addRespondingChild:(XSViewController *)viewController
 {
+    if ([self.respondingChildren containsObject:viewController]) {
+        NSLog(@"%@ is already registered as a responding child of %@", viewController, self);
+        return;
+    }
+    
     [self configureViewController:viewController];
 	[self insertObject:viewController inRespondingChildrenAtIndex:[self.respondingChildren count]];
 }
