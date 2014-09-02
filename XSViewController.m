@@ -156,13 +156,21 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
         return;
     }
     
-    //[self configureViewController:viewController];
 	[self insertObject:viewController inRespondingChildrenAtIndex:[self.respondingChildren count]];
 }
 
 - (void)removeRespondingChild:(XSViewController *)viewController
 {
 	[self.respondingChildren removeObject:viewController];
+    [self patchResponderChain];
+}
+
+- (void)removeAllRespondingChildren
+{
+    for (id child in [self.respondingChildren copy]) {
+        [self.respondingChildren removeObject:child];
+    }
+    [self patchResponderChain];
 }
 
 - (void)removeObjectFromRespondingChildrenAtIndex:(NSUInteger)index
@@ -174,6 +182,9 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 - (void)insertObject:(XSViewController *)viewController inRespondingChildrenAtIndex:(NSUInteger)index
 {
     [self configureViewController:viewController];
+    
+    // Note: the viewController is strongly retained.
+    // it might be prefereable to retain a zeroing weak reference instead.
 	[self.respondingChildren insertObject:viewController atIndex:index];
 	[viewController setParent:self];
 	[self patchResponderChain];

@@ -106,6 +106,7 @@
 - (void)insertObjects:(NSArray *)viewControllers inRespondingChildrenAtIndex:(NSUInteger)index;
 
 - (void)removeRespondingChild:(XSViewController *)viewController;
+- (void)removeAllRespondingChildren;
 - (void)removeObjectFromRespondingChildrenAtIndex:(NSUInteger)index;
 
 /*!
