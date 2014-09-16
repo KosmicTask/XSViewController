@@ -151,6 +151,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 
 - (void)addRespondingChild:(XSViewController *)viewController
 {
+    
     if ([self.respondingChildren containsObject:viewController]) {
         NSLog(@"%@ is already registered as a responding child of %@", viewController, self);
         return;
@@ -162,13 +163,15 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 - (void)removeRespondingChild:(XSViewController *)viewController
 {
 	[self.respondingChildren removeObject:viewController];
+    viewController.parent = nil;
     [self patchResponderChain];
 }
 
 - (void)removeAllRespondingChildren
 {
-    for (id child in [self.respondingChildren copy]) {
+    for (XSViewController * child in [self.respondingChildren copy]) {
         [self.respondingChildren removeObject:child];
+        child.parent = nil;
     }
     [self patchResponderChain];
 }
