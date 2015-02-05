@@ -130,8 +130,10 @@
 }
 
 - (void)removeRespondingViewController:(XSViewController *)viewController
-{    
-	[self.respondingViewControllers removeObject:viewController];
+{
+    if ([self.respondingViewControllers containsObject:viewController]) {
+        [self.respondingViewControllers removeObject:viewController];
+    }
 	[self patchResponderChain];
 }
 
@@ -186,6 +188,14 @@
     // We are being called by view controllers at the beginning of creating the tree,
     // most likely load time and the root of the tree hasn't been added to our list of controllers.
 	if ([self.respondingViewControllers count] == 0) {
+        
+        if (self.responderChainPatchRoot == self.window) {
+            
+            if (self.responderChainPatchRoot.nextResponder != self) {
+                self.responderChainPatchRoot.nextResponder = self;
+            }
+        }
+        
 		return;
     }
     
@@ -207,7 +217,9 @@
     
     // Append the window controller to the chain when building from the window
     if (self.responderChainPatchRoot == self.window) {
-        nextViewController.nextResponder = self;
+        if (self.responderChainPatchRoot.nextResponder != self) {
+            nextViewController.nextResponder = self;
+        }
     }
 }
 
