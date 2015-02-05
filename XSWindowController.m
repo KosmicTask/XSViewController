@@ -51,7 +51,7 @@
 @synthesize responderChainPatchRoot = _responderChainPatchRoot;
 
 #pragma mark -
-#pragma mark Setup
+#pragma mark Lifecycle
 
 - (id)initWithWindowNibName:(NSString *)nibName
 {

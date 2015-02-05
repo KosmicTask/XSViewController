@@ -71,7 +71,8 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
     _raiseExceptionForDesignatedInitialiser = value;
 }
 
-#pragma mark Designated Initialiser
+#pragma mark -
+#pragma mark Life cycle
 
 - (id)initWithNibName:(NSString *)name bundle:(NSBundle *)bundle windowController:(XSWindowController *)windowController
 {
@@ -108,6 +109,11 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 {
     _respondingChildren = [NSMutableArray array]; // set up a blank mutable array
     _alwaysQueryRootControllerForWindowController = NO;
+}
+
+- (void)dealloc
+{
+    [self removeAllRespondingChildren];
 }
 
 #pragma mark Accessors
@@ -169,10 +175,17 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 
 - (void)removeAllRespondingChildren
 {
+    if (self.respondingChildren.count == 0) {
+        return;
+    }
+    
+    // remove all the child
     for (XSViewController * child in [self.respondingChildren copy]) {
         [self.respondingChildren removeObject:child];
         child.parent = nil;
     }
+    
+    // patch the chain
     [self patchResponderChain];
 }
 
