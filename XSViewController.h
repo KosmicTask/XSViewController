@@ -91,7 +91,6 @@
  The receiver will not necessarily receive the action first.
  
  This behavior is powerful but can make figuring out which object will respond to an action difficult.
- In general then
  
  */
 - (void)addRespondingChild:(XSViewController *)viewController;

@@ -111,11 +111,6 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
     _alwaysQueryRootControllerForWindowController = NO;
 }
 
-- (void)dealloc
-{
-    [self removeAllRespondingChildren];
-}
-
 #pragma mark Accessors
 
 - (void)setWindowController:(XSWindowController *)controller
