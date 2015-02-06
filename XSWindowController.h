@@ -86,6 +86,7 @@
  */
 - (void)removeRespondingViewController:(XSViewController *)viewController;
 - (void)removeObjectFromRespondingViewControllersAtIndex:(NSUInteger)index;
+- (void)removeAllRespondingViewControllers;
 
 /*!
  An array of all descendant responders sorted according to -addControllersToResponderChainInAscendingOrder

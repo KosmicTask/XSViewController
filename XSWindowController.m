@@ -65,6 +65,14 @@
 	return self;
 }
 
+- (void)dealloc
+{
+    NSInteger respondingViewControllers = [self countOfRespondingViewControllers];
+    if (respondingViewControllers != 0) {
+        NSLog(@"Warning: controllers are still present in the responder chain.");
+    }
+}
+
 #pragma mark -
 #pragma mark Window management
 
@@ -135,6 +143,16 @@
         [self.respondingViewControllers removeObject:viewController];
     }
 	[self patchResponderChain];
+}
+
+- (void)removeAllRespondingViewControllers
+{
+    if (self.respondingViewControllers.count == 0) {
+        return;
+    }
+    
+    [self.respondingViewControllers removeAllObjects];
+    [self patchResponderChain];
 }
 
 - (void)removeObjectFromRespondingViewControllersAtIndex:(NSUInteger)index
