@@ -69,7 +69,7 @@
 {
     NSInteger respondingViewControllers = [self countOfRespondingViewControllers];
     if (respondingViewControllers != 0) {
-        NSLog(@"Warning: controllers are still present in the responder chain.");
+        NSLog(@"%@ - Warning: controllers are still present in the responder chain.", [self className]);
     }
 }
 
