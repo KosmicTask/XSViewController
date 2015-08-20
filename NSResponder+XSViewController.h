@@ -34,7 +34,7 @@
 
 extern NSString *XSVChainTypeKey;
 
-NS_ENUM(NSInteger, XSVChainType) {
+extern NS_ENUM(NSInteger, XSVChainType) {
     XSVEventChainType,
     XSVActionChainType,
 };
