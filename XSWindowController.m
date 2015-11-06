@@ -1,6 +1,5 @@
 //
 //  XSWindowController.m
-//  View Controllers
 //
 //  Created by Jonathan Dann and Cathy Shive on 14/04/2008.
 //
@@ -32,17 +31,17 @@
 // For example, "Contains "View Controllers" by Jonathan Dann and Cathy Shive" will do.
 
 #import "XSWindowController.h"
-#import "XSViewController.h"
+#import "XSActionResponder.h"
 
-@interface NSMutableArray(XSViewController)
+@interface NSMutableArray(XSResponder)
 - (NSMutableArray *)xsv_reverse;
 @end
 
 @interface XSWindowController ()
-@property(nonatomic,copy) NSMutableArray *respondingViewControllers;
+@property(nonatomic,copy) NSMutableArray *actionResponders;
 
-- (void)configureViewController:(XSViewController *)viewController;
-- (void)configureViewControllers:(NSArray *)viewControllers;
+- (void)configureActionResponder:(XSActionResponder *)actionResponder;
+- (void)configureActionResponders:(NSArray *)actionResponders;
 
 @end
 
@@ -58,7 +57,7 @@
     self = [super initWithWindowNibName:nibName];
 	
     if (self) {
-        _respondingViewControllers = [NSMutableArray array];
+        _actionResponders = [NSMutableArray array];
         _addControllersToResponderChainInAscendingOrder = YES;
     }
     
@@ -67,19 +66,14 @@
 
 - (void)dealloc
 {
-    NSInteger respondingViewControllers = [self countOfRespondingViewControllers];
-    if (respondingViewControllers != 0) {
-        NSLog(@"%@ - Warning: controllers are still present in the responder chain.", [self className]);
+    NSInteger actionResponders = [self countOfActionResponders];
+    if (actionResponders != 0) {
+        NSLog(@"%@ - Warning: action responders are still present in the responder chain.", [self className]);
     }
 }
 
 #pragma mark -
 #pragma mark Window management
-
-- (void)windowWillClose:(NSNotification *)notification
-{
-	[self.respondingViewControllers makeObjectsPerformSelector:@selector(removeObservations)];
-}
 
 - (void)windowDidLoad
 {
@@ -88,94 +82,94 @@
 }
 
 #pragma mark -
-#pragma mark View controller management
+#pragma mark Action responder management
 
-- (void)setRespondingViewControllers:(NSMutableArray *)newViewControllers
+- (void)setActionResponders:(NSMutableArray *)newActionResponders
 {
-	if (_respondingViewControllers == newViewControllers) {
+	if (_actionResponders == newActionResponders) {
 		return;
     }
     
-	NSMutableArray *newViewControllersCopy = [newViewControllers mutableCopy];
-	_respondingViewControllers = newViewControllersCopy;
+	NSMutableArray *newActionRespondersCopy = [newActionResponders mutableCopy];
+	_actionResponders = newActionRespondersCopy;
 }
 
-- (NSUInteger)countOfRespondingViewControllers
+- (NSUInteger)countOfActionResponders
 {
-	return [self.respondingViewControllers count];
+	return [self.actionResponders count];
 }
 
-- (XSViewController *)objectInRespondingViewControllersAtIndex:(NSUInteger)index
+- (XSActionResponder *)objectInActionRespondersAtIndex:(NSUInteger)index
 {
-	return [self.respondingViewControllers objectAtIndex:index];
+	return [self.actionResponders objectAtIndex:index];
 }
 
-- (void)addRespondingViewController:(XSViewController *)viewController
+- (void)addActionResponder:(XSActionResponder *)actionResponder
 {
-    [self configureViewController:viewController];
-	[self.respondingViewControllers insertObject:viewController atIndex:[self.respondingViewControllers count]];
+    [self configureActionResponder:actionResponder];
+	[self.actionResponders insertObject:actionResponder atIndex:[self.actionResponders count]];
 	[self patchResponderChain];
 }
 
-- (void)insertObject:(XSViewController *)viewController inRespondingViewControllersAtIndex:(NSUInteger)index
+- (void)insertObject:(XSActionResponder *)actionResponder inActionRespondersAtIndex:(NSUInteger)index
 {
-    [self configureViewController:viewController];
-	[self.respondingViewControllers insertObject:viewController atIndex:index];
+    [self configureActionResponder:actionResponder];
+	[self.actionResponders insertObject:actionResponder atIndex:index];
 	[self patchResponderChain];
 }
 
-- (void)insertObjects:(NSArray *)viewControllers inViewControllersAtIndexes:(NSIndexSet *)indexes
+- (void)insertObjects:(NSArray *)actionResponders inActionRespondersAtIndexes:(NSIndexSet *)indexes
 {
-    [self configureViewControllers:viewControllers];
-	[self.respondingViewControllers insertObjects:viewControllers atIndexes:indexes];
+    [self configureActionResponders:actionResponders];
+	[self.actionResponders insertObjects:actionResponders atIndexes:indexes];
 	[self patchResponderChain];
 }
 
-- (void)insertObjects:(NSArray *)viewControllers inViewControllersAtIndex:(NSUInteger)index
+- (void)insertObjects:(NSArray *)actionResponders inActionRespondersAtIndex:(NSUInteger)index
 {
-    [self configureViewControllers:viewControllers];
-	[self insertObjects:viewControllers inViewControllersAtIndexes:[NSIndexSet indexSetWithIndex:index]];
+    [self configureActionResponders:actionResponders];
+	[self insertObjects:actionResponders inActionRespondersAtIndexes:[NSIndexSet indexSetWithIndex:index]];
 }
 
-- (void)removeRespondingViewController:(XSViewController *)viewController
+- (void)removeActionResponder:(XSActionResponder *)actionResponder
 {
-    if ([self.respondingViewControllers containsObject:viewController]) {
-        [self.respondingViewControllers removeObject:viewController];
+    if ([self.actionResponders containsObject:actionResponder]) {
+        [self.actionResponders removeObject:actionResponder];
     }
 	[self patchResponderChain];
 }
 
-- (void)removeAllRespondingViewControllers
+- (void)removeAllActionResponders
 {
-    if (self.respondingViewControllers.count == 0) {
+    if (self.actionResponders.count == 0) {
         return;
     }
     
-    [self.respondingViewControllers removeAllObjects];
+    [self.actionResponders removeAllObjects];
     [self patchResponderChain];
 }
 
-- (void)removeObjectFromRespondingViewControllersAtIndex:(NSUInteger)index
+- (void)removeObjectFromActionRespondersAtIndex:(NSUInteger)index
 {
-	[self.respondingViewControllers removeObjectAtIndex:index];
+	[self.actionResponders removeObjectAtIndex:index];
 	[self patchResponderChain];
 }
 
 #pragma mark -
-#pragma mark View controller configuration
+#pragma mark Action responder configuration
 
-- (void)configureViewController:(XSViewController *)viewController
+- (void)configureActionResponder:(XSActionResponder *)actionResponder
 {
-    NSAssert([viewController isKindOfClass:[XSViewController class]], @"Invalid view controller class");
-    if (viewController.windowController != self) {
-        viewController.windowController = self;
+    NSAssert([actionResponder isKindOfClass:[XSActionResponder class]], @"Invalid action responder class");
+    if (actionResponder.windowController != self) {
+        actionResponder.windowController = self;
     }
 }
 
-- (void)configureViewControllers:(NSArray *)viewControllers
+- (void)configureActionResponders:(NSArray *)actionResponders
 {
-    for (XSViewController *viewController in viewControllers) {
-        [self configureViewController:viewController];
+    for (XSActionResponder *actionResponder in actionResponders) {
+        [self configureActionResponder:actionResponder];
     }
 }
 
@@ -203,9 +197,9 @@
 
 - (void)patchResponderChain
 {    
-    // We are being called by view controllers at the beginning of creating the tree,
-    // most likely load time and the root of the tree hasn't been added to our list of controllers.
-	if ([self.respondingViewControllers count] == 0) {
+    // We are being called by action responders at the beginning of creating the tree,
+    // most likely load time and the root of the tree hasn't been added to our list of responders.
+	if ([self.actionResponders count] == 0) {
         
         if (self.responderChainPatchRoot == self.window) {
             
@@ -218,46 +212,46 @@
     }
     
     // Get the responders
-	NSArray *flatViewControllers = [self respondingDescendants];
+	NSArray *flatActionResponders = [self respondingDescendants];
     
     // Start building from the patch root
-    XSViewController *nextViewController = [flatViewControllers objectAtIndex:0];
-    [self.responderChainPatchRoot setNextResponder:nextViewController];
+    XSActionResponder *nextActionResponder = [flatActionResponders objectAtIndex:0];
+    [self.responderChainPatchRoot setNextResponder:nextActionResponder];
 	
     NSUInteger index = 0;
-	NSUInteger viewControllerCount = [flatViewControllers count] - 1;
+	NSUInteger actionResponderCount = [flatActionResponders count] - 1;
     
-    // Set the next responder of each controller to the next, the last in the array has no default next responder.
-	for (index = 0; index < viewControllerCount ; index++) {
-        nextViewController = [flatViewControllers objectAtIndex:index + 1];
-		[[flatViewControllers objectAtIndex:index] setNextResponder:nextViewController];
+    // Set the next responder of each action responder to the next, the last in the array has no default next responder.
+	for (index = 0; index < actionResponderCount ; index++) {
+        nextActionResponder = [flatActionResponders objectAtIndex:index + 1];
+		[[flatActionResponders objectAtIndex:index] setNextResponder:nextActionResponder];
 	}
     
     // Append the window controller to the chain when building from the window
     if (self.responderChainPatchRoot == self.window) {
         if (self.responderChainPatchRoot.nextResponder != self) {
-            nextViewController.nextResponder = self;
+            nextActionResponder.nextResponder = self;
         }
     }
 }
 
 - (NSArray *)respondingDescendants
 {
-    NSMutableArray *flatViewControllers = [NSMutableArray array];
+    NSMutableArray *flatActionResponders = [NSMutableArray array];
     
-    // flatten the view controllers into an array
-	for (XSViewController *viewController in self.respondingViewControllers) {
-		[flatViewControllers addObject:viewController];
-		[flatViewControllers addObjectsFromArray:[viewController respondingDescendants]];
+    // flatten the action responders into an array
+	for (XSActionResponder *actionResponder in self.actionResponders) {
+		[flatActionResponders addObject:actionResponder];
+		[flatActionResponders addObjectsFromArray:[actionResponder respondingDescendants]];
 	}
     
     // reverse the order to build from the children up
     if (self.addControllersToResponderChainInAscendingOrder) {
-        flatViewControllers = [flatViewControllers xsv_reverse];
+        flatActionResponders = [flatActionResponders xsv_reverse];
     }
 
     // Yes, it's mutable, but callers should respect the return type
-    return flatViewControllers;
+    return flatActionResponders;
 }
 
 - (void)logResponderChain
@@ -269,8 +263,7 @@
     // NSView -> .. -> NSView -> NSWindow -> NSWindowController -> NSWindow delegate -> NSDocument -> NSApp -> AppDelegate -> NSDocumentController
     //
     // Notes:
-    // 1. The actually responders called will of course on the view controller hierarchy and its configuration.
-    // 2. This method generally reports an event style responder chain.
+    // 1. This method generally reports an event style responder chain.
     //
     NSResponder *responder = [self.window firstResponder];
     NSLog(@"First responder: %@", responder);
@@ -280,9 +273,7 @@
 }
 @end
 
-
-
-@implementation NSMutableArray(XSViewController)
+@implementation NSMutableArray(XSResponder)
 
 - (NSMutableArray *)xsv_reverse
 {

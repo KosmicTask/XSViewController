@@ -33,7 +33,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-@class XSViewController;
+@class XSActionResponder;
 
 @interface XSWindowController : NSWindowController
 
@@ -43,7 +43,7 @@
  This will generally either be the NSWindowController or NSWindow instances or nil (default).
  If set to an object other than any of the above than a warning is logged.
  
- If the property value is nil then responder patching begins at the window rathe than the window controller.
+ If the property value is nil then responder patching begins at the window rather than the window controller.
  
  Defaults to nil even though this breaks compatibility with previous versions.
  To me it seems more logical to have the window controller queried after its child view controllers.
@@ -51,10 +51,12 @@
  */
 @property (weak, nonatomic) NSResponder *responderChainPatchRoot;
 
-/*
- The top level view controllers managed by this window.
+/*!
+ 
+ The action responders managed by this controller.
+ 
  */
-@property (nonatomic,copy,readonly)  NSMutableArray *respondingViewControllers;
+@property (nonatomic,copy,readonly)  NSMutableArray *actionResponders;
 
 /*
  If YES then controllers are added to the responder chain starting with the furthest child.
@@ -67,26 +69,24 @@
  */
 @property BOOL addControllersToResponderChainInAscendingOrder;
 
-- (NSUInteger)countOfRespondingViewControllers;
-- (XSViewController *)objectInRespondingViewControllersAtIndex:(NSUInteger)index;
+- (NSUInteger)countOfActionResponders;
+- (XSActionResponder *)objectInActionRespondersAtIndex:(NSUInteger)index;
 
 /*!
- Add a view controller to the controllers array.
+ Add an action responder.
  */
-- (void)addRespondingViewController:(XSViewController *)viewController;
-- (void)insertObject:(XSViewController *)viewController inRespondingViewControllersAtIndex:(NSUInteger)index;
-- (void)insertObjects:(NSArray *)viewControllers inViewControllersAtIndexes:(NSIndexSet *)indexes;
-- (void)insertObjects:(NSArray *)viewControllers inViewControllersAtIndex:(NSUInteger)index;
+- (void)addActionResponder:(XSActionResponder *)actionResponder;
+- (void)insertObject:(XSActionResponder *)actionResponder inActionRespondersAtIndex:(NSUInteger)index;
+- (void)insertObjects:(NSArray *)actionResponders inActionRespondersAtIndex:(NSUInteger)index;
+- (void)insertObjects:(NSArray *)actionResponders inActionRespondersAtIndexes:(NSIndexSet *)indexes;
 
 /*!
- 
- It should be noted that if we remove an object from the view controllers
+ It should be noted that if we remove an object from the action responders
  array then the whole tree that descends from it will go too.
- 
  */
-- (void)removeRespondingViewController:(XSViewController *)viewController;
-- (void)removeObjectFromRespondingViewControllersAtIndex:(NSUInteger)index;
-- (void)removeAllRespondingViewControllers;
+- (void)removeActionResponder:(XSActionResponder *)actionResponder;
+- (void)removeObjectFromActionRespondersAtIndex:(NSUInteger)index;
+- (void)removeAllActionResponders;
 
 /*!
  An array of all descendant responders sorted according to -addControllersToResponderChainInAscendingOrder
@@ -94,9 +94,9 @@
 - (NSArray *)respondingDescendants;
 
 /*!
- This method creates an array containing all the view controllers,
+ This method creates an array containing all the action responders,
  then adds them to the responder chain in sequence.
- The last view controller in the array has nextResponder == nil.
+ The last action responder in the array has nextResponder == nil.
  */
 - (void)patchResponderChain;
 
