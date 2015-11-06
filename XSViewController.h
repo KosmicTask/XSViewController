@@ -32,13 +32,16 @@
 // For example, "Contains "View Controllers" by Jonathan Dann and Cathy Shive" will do.
 
 #import <Cocoa/Cocoa.h>
+#import "XSProxyViewController.h"
 
 // XS for Xtra-Special!
 
 @class XSWindowController;
-@interface XSViewController : NSViewController
+@interface XSViewController : NSViewController {
+}
 
 @property (weak) XSViewController *parent;
+//@property (strong, nonatomic, readonly) XSProxyViewController *proxyViewController;
 
 /*!
  
