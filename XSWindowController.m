@@ -210,8 +210,7 @@
         if (self.responderChainPatchRoot == self.window) {
             
             if (self.responderChainPatchRoot.nextResponder != self) {
-                // This seems unnecssary given the fact that we no longer do the same below
-                //self.responderChainPatchRoot.nextResponder = self;
+                self.responderChainPatchRoot.nextResponder = self;
             }
         }
         
@@ -237,8 +236,7 @@
     // Append the window controller to the chain when building from the window
     if (self.responderChainPatchRoot == self.window) {
         if (self.responderChainPatchRoot.nextResponder != self) {
-            // this cannot be correct as the end result is two copies of the window controller in the chain
-            //nextViewController.nextResponder = self;
+            nextViewController.nextResponder = self;
         }
     }
 }

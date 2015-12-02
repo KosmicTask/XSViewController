@@ -140,7 +140,8 @@ NSString *XSVChainTypeKey = @"ChainType";
         return chain;
     }
     
-    if (windowDelegate) {
+    // we don't want to duplicate the window controller
+    if (windowDelegate && windowDelegate != windowController) {
         [chain addObject:windowDelegate];
     }
     
