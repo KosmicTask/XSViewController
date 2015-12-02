@@ -52,7 +52,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 - (void)configureViewController:(XSViewController *)viewController;
 - (void)configureViewControllers:(NSArray *)viewControllers;
 
-@property (strong, readwrite, nonatomic) XSProxyViewController *proxyViewController;
+@property (strong, readwrite, nonatomic) NSViewController *proxyViewController;
 
 @end
 
@@ -113,6 +113,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
     _alwaysQueryRootControllerForWindowController = NO;
 }
 
+#pragma mark -
 #pragma mark Accessors
 
 - (void)setWindowController:(XSWindowController *)controller
@@ -145,9 +146,22 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 {
     [super setView:view];
 
-    if (self.proxyViewController) {
-        self.proxyViewController.view = view;
+    // On 10.10 and above AppKit inserts NSViewController into the responder chain above the controller view.
+    // This clearly interfers with the XSViewController design philosophy of placing controllers
+    // between the NSWindow and NSWindowController.
+    // Just manipulating the view's nextResponder directly doesn't seem to work - the view wants to retain its controller as its nextReponder.
+    // Hence we allocate a controller proxy to serve as the view's next responder.
+    // This leaves the proxy parent free to be inserted elsewhere in the chain.
+    if (!self.proxyViewController) {
+        Class proxyViewControllerClass = self.proxyViewControllerClass;
+        
+        // contract
+        NSAssert([proxyViewControllerClass isSubclassOfClass:[NSViewController class]], @"invalid proxy view controller class");
+        
+        // create proxy view controller
+        self.proxyViewController = [[proxyViewControllerClass alloc] init];
     }
+    self.proxyViewController.view = view;
 }
 
 - (NSView *)view
@@ -159,28 +173,13 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
     }
 }
 
-- (void)setProxyViewController:(XSProxyViewController *)proxyViewController
+- (Class)proxyViewControllerClass
 {
-    _proxyViewController = proxyViewController;
- 
-    // contract
-    NSAssert(_proxyViewController, @"invalid proxyViewController");
-    NSAssert(self.view != nil && _proxyViewController.view == self.view, @"proxyViewController not correctly configured");
+    // subclasses can override to provide proxy class customisation
+    return [NSViewController class];
 }
 
-/*
- 
-- (void)setMenu:(NSMenu *)menu
-{
-    _menu = menu;
-}
-
-- (NSMenu *)menu
-{
-    return _menu;
-}
-*/
-
+#pragma mark -
 #pragma mark Indexed Accessors
 
 - (NSUInteger)countOfRespondingChildren
@@ -257,23 +256,14 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 	[self insertObjects:viewControllers inRespondingChildrenAtIndexes:[NSIndexSet indexSetWithIndex:index]];
 }
 
-# pragma mark View controller configuration
+#pragma mark -
+#pragma mark View controller configuration
 
 - (void)configureViewController:(XSViewController *)viewController
 {
     // Assign the window controller if available and dynamic window controller resolution is off
     if (viewController.windowController != self.windowController && !self.alwaysQueryRootControllerForWindowController) {
         viewController.windowController = self.windowController;
-    }
-    
-    // On 10.10 and above AppKit inserts NSViewController into the responder chain above the controller view.
-    // This clearly interfers with the XSViewController design philosophy of placing controllers
-    // between the NSWindow and NSWindowController.
-    // Just manipulating the view's nextResponder directly doesn't seem to work - the view wants to retain its controller as its nextReponder.
-    // Hence we allocate a controller proxy to serve as the view's next responder.
-    // This leaves the proxy parent free to be inserted elsewhere in the chain.
-    if (!viewController.proxyViewController) {
-        [viewController createProxyViewControllerWithClass:[XSProxyViewController class]];
     }
 }
 
@@ -284,26 +274,17 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
     }
 }
 
-- (void)createProxyViewControllerWithClass:(Class)proxyViewControllerClass
-{
-    // subclasses can override to provide proxy class customisation
-    
-    // contract
-    NSAssert(self.view, @"invalid view");
-    NSAssert([proxyViewControllerClass isSubclassOfClass:[XSProxyViewController class]], @"invalid proxy view controller class");
-    
-    // create proxy view controller
-    self.proxyViewController = [[proxyViewControllerClass alloc] initWithView:self.view];
-}
 
-# pragma mark Responder chain management
+#pragma mark -
+#pragma mark Responder chain management
 
 - (void)patchResponderChain
 {
     [self.windowController patchResponderChain];
 }
 
-# pragma mark Utilities
+#pragma mark -
+#pragma mark Utilities
 
 - (void)setRespondingChildren:(NSMutableArray *)newChildren
 {
