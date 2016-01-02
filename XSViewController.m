@@ -113,6 +113,13 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
     _alwaysQueryRootControllerForWindowController = NO;
 }
 
+- (void)dealloc
+{
+    // this seems prudent given that the superclass on 10.11+
+    // may operate on -nextResponder on dealloc to fixup the responder chain.
+    self.nextResponder = nil;
+}
+
 #pragma mark -
 #pragma mark Accessors
 
@@ -207,6 +214,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 {
 	[self.respondingChildren removeObject:viewController];
     viewController.parent = nil;
+    viewController.nextResponder = nil;
     [self patchResponderChain];
 }
 
@@ -220,6 +228,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
     for (XSViewController * child in [self.respondingChildren copy]) {
         [self.respondingChildren removeObject:child];
         child.parent = nil;
+        child.nextResponder = nil;
     }
     
     // patch the chain
@@ -239,7 +248,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
     // Note: the viewController is strongly retained.
     // it might be prefereable to retain a zeroing weak reference instead.
 	[self.respondingChildren insertObject:viewController atIndex:index];
-	[viewController setParent:self];
+	[viewController setParent:self]; // weak
 	[self patchResponderChain];
 }
 

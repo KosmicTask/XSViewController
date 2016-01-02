@@ -202,7 +202,12 @@
 }
 
 - (void)patchResponderChain
-{    
+{
+    // note that the declaration for nextresponder is @property (nullable, assign) NSResponder *nextResponder;
+    // this is not the same as weak; it is the same as __unsafe_unretained.
+    // hence we need to ensure that controllers get removed from the chain before they deallocate.
+    // otherwise we start talking to zombies.
+    
     // We are being called by view controllers at the beginning of creating the tree,
     // most likely load time and the root of the tree hasn't been added to our list of controllers.
 	if ([self.respondingViewControllers count] == 0) {
