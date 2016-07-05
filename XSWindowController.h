@@ -65,7 +65,8 @@
  they manage seems to make more sense to me.
  
  */
-@property BOOL addControllersToResponderChainInAscendingOrder;
++ (BOOL)addControllersToResponderChainInAscendingOrder;
++ (void)setAddControllersToResponderChainInAscendingOrder:(BOOL)value;
 
 - (NSUInteger)countOfRespondingViewControllers;
 - (XSViewController *)objectInRespondingViewControllersAtIndex:(NSUInteger)index;
@@ -99,6 +100,7 @@
  The last view controller in the array has nextResponder == nil.
  */
 - (void)patchResponderChain;
++ (void)patchResponderChain:(XSViewController * )viewController;
 
 /*!
  Log the responder chain to the console.

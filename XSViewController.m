@@ -53,7 +53,6 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 - (void)configureViewControllers:(NSArray *)viewControllers;
 
 @property (strong, readwrite, nonatomic) NSViewController *proxyViewController;
-
 @end
 
 #pragma mark -
@@ -123,10 +122,23 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 #pragma mark -
 #pragma mark Accessors
 
+- (void)detach
+{
+    self.parent = nil;  // detach from NSViewController tree
+    self.nextResponder = nil; // detach from responder
+    
+    [self willChangeValueForKey:@"windowController"];
+    _windowController = nil;
+    [self didChangeValueForKey:@"windowController"];
+}
+
 - (void)setWindowController:(XSWindowController *)controller
 {
     _windowController = controller;
-    [self patchResponderChain];
+    
+    if (!self.alwaysQueryRootControllerForWindowController) {
+        [self patchResponderChain];
+    }
 }
 
 - (XSWindowController *)windowController
@@ -140,7 +152,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
         // If no local controller instance available then query the root
         controller = [self.rootController windowController];
         
-        // Cache the window controller if dynamic querying not required
+        // Cache the window controller if dynamic querying not required.
         if (controller && !self.alwaysQueryRootControllerForWindowController) {
             _windowController = controller;
         }
@@ -211,8 +223,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 - (void)removeRespondingChild:(XSViewController *)viewController
 {
 	[self.respondingChildren removeObject:viewController];
-    viewController.parent = nil;
-    viewController.nextResponder = nil;
+    [viewController detach];
     [self patchResponderChain];
 }
 
@@ -222,11 +233,10 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
         return;
     }
     
-    // remove all the child
+    // remove all the children
     for (XSViewController * child in [self.respondingChildren copy]) {
         [self.respondingChildren removeObject:child];
-        child.parent = nil;
-        child.nextResponder = nil;
+        [child detach];
     }
     
     // patch the chain
@@ -235,7 +245,9 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 
 - (void)removeObjectFromRespondingChildrenAtIndex:(NSUInteger)index
 {
+    XSViewController * child = self.respondingChildren[index];
 	[self.respondingChildren removeObjectAtIndex:index];
+    [child detach];
 	[self patchResponderChain];
 }
 
@@ -244,9 +256,9 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
     [self configureViewController:viewController];
     
     // Note: the viewController is strongly retained.
-    // it might be prefereable to retain a zeroing weak reference instead.
-	[self.respondingChildren insertObject:viewController atIndex:index];
-	[viewController setParent:self]; // weak
+    // it might be preferable to retain a zeroing weak reference instead.
+    [self.respondingChildren insertObject:viewController atIndex:index];
+    [viewController setParent:self]; // weak
 	[self patchResponderChain];
 }
 
@@ -287,7 +299,28 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 
 - (void)patchResponderChain
 {
-    [self.windowController patchResponderChain];
+    
+    // if the root controller has a window controller then this view is part
+    // of an active view hierachy that wants to be included in the responder chain
+    XSWindowController *windowController = [self.rootController windowController];
+    
+    if (windowController) {
+        /*
+         
+         The window controller will build a chain including all of its responding view controllers.
+         
+         */
+        [windowController patchResponderChain];
+    }
+    else {
+
+        /*
+         
+         No Window controller available so just patch the chain locally.
+         
+         */
+        [XSWindowController patchResponderChain:self];        
+    }
 }
 
 #pragma mark -
@@ -326,9 +359,10 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 	NSMutableArray *array = [NSMutableArray array];
     
 	for (XSViewController *child in self.respondingChildren) {
-		[array addObject:child];
-		if ([child countOfRespondingChildren] > 0)
-			[array addObjectsFromArray:[child respondingDescendants]];
+        [array addObject:child];
+        if ([child countOfRespondingChildren] > 0) {
+            [array addObjectsFromArray:[child respondingDescendants]];
+        }
 	}
 	return [array copy]; // return an immutable array
 }
@@ -338,4 +372,18 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 	[self.respondingChildren makeObjectsPerformSelector:@selector(removeObservations)];
 }
 
+@end
+
+
+@implementation NSArray(XSViewController)
+
+- (NSArray *)xsv_reverse
+{
+    NSMutableArray *array = [NSMutableArray arrayWithCapacity:[self count]];
+    NSEnumerator *enumerator = [self reverseObjectEnumerator];
+    for (id element in enumerator) {
+        [array addObject:element];
+    }
+    return array;
+}
 @end

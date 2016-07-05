@@ -33,6 +33,10 @@
 
 #import <Cocoa/Cocoa.h>
 
+@interface NSArray(XSViewController)
+- (NSArray *)xsv_reverse;
+@end
+
 // XS for Xtra-Special!
 
 @class XSWindowController;
@@ -58,7 +62,7 @@
  
  */
 @property (weak, nonatomic) XSWindowController *windowController;
-
+- (void)detach;
 
 @property BOOL alwaysQueryRootControllerForWindowController;
 

@@ -34,9 +34,7 @@
 #import "XSWindowController.h"
 #import "XSViewController.h"
 
-@interface NSMutableArray(XSViewController)
-- (NSMutableArray *)xsv_reverse;
-@end
+static BOOL m_addControllersToResponderChainInAscendingOrder = YES;
 
 @interface XSWindowController ()
 @property(nonatomic,copy) NSMutableArray *respondingViewControllers;
@@ -50,6 +48,16 @@
 
 @synthesize responderChainPatchRoot = _responderChainPatchRoot;
 
++ (BOOL)addControllersToResponderChainInAscendingOrder
+{
+    return m_addControllersToResponderChainInAscendingOrder;
+}
+
++ (void)setAddControllersToResponderChainInAscendingOrder:(BOOL)value
+{
+    m_addControllersToResponderChainInAscendingOrder = value;
+}
+
 #pragma mark -
 #pragma mark Lifecycle
 
@@ -59,7 +67,6 @@
 	
     if (self) {
         _respondingViewControllers = [NSMutableArray array];
-        _addControllersToResponderChainInAscendingOrder = YES;
     }
     
 	return self;
@@ -246,6 +253,38 @@
     }
 }
 
++ (void)patchResponderChain:(XSViewController * )vc
+{
+    /*
+     
+     The responder chain is being constructed or modified either before being added to a window
+     or while the view hierachy has been removed from its window controller. This means that a controller
+     always has access to at least a partial responder chain.
+     
+     */
+    NSArray *flatViewControllers = [vc respondingDescendants];
+    if (flatViewControllers.count == 0) {
+        return;
+    }
+    
+    // reverse the order to build from the children up
+    if (self.addControllersToResponderChainInAscendingOrder) {
+        flatViewControllers = [flatViewControllers xsv_reverse];
+    }
+    
+    NSUInteger index = 0;
+    NSUInteger viewControllerCount = [flatViewControllers count] - 1;
+    XSViewController *nextViewController = [flatViewControllers objectAtIndex:0];
+    
+    // Set the next responder of each controller to the next, the last in the array has no default next responder.
+    for (index = 0; index < viewControllerCount ; index++) {
+        nextViewController = [flatViewControllers objectAtIndex:index + 1];
+        [[flatViewControllers objectAtIndex:index] setNextResponder:nextViewController];
+    }
+    nextViewController.nextResponder = vc;
+
+}
+
 - (NSArray *)respondingDescendants
 {
     NSMutableArray *flatViewControllers = [NSMutableArray array];
@@ -257,11 +296,10 @@
 	}
     
     // reverse the order to build from the children up
-    if (self.addControllersToResponderChainInAscendingOrder) {
-        flatViewControllers = [flatViewControllers xsv_reverse];
+    if (self.class.addControllersToResponderChainInAscendingOrder) {
+       return [flatViewControllers xsv_reverse];
     }
 
-    // Yes, it's mutable, but callers should respect the return type
     return flatViewControllers;
 }
 
@@ -285,18 +323,3 @@
 }
 @end
 
-
-
-@implementation NSMutableArray(XSViewController)
-
-- (NSMutableArray *)xsv_reverse
-{
-    NSMutableArray *array = [NSMutableArray arrayWithCapacity:[self count]];
-    NSEnumerator *enumerator = [self reverseObjectEnumerator];
-    for (id element in enumerator) {
-        [array addObject:element];
-    }
-    return array;
-}
-
-@end
