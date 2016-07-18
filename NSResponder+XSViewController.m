@@ -109,7 +109,7 @@ NSString *XSVChainTypeKey = @"ChainType";
     if ([options[XSVChainTypeKey] integerValue] == XSVActionChainType) {
         
         // A window is required
-        if (![self respondsToSelector:@selector(window)]) {
+        if (![responder respondsToSelector:@selector(window)]) {
             return chain;
         }
         NSWindow *window = [(id)responder window];
