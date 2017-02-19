@@ -77,6 +77,9 @@ static BOOL m_addControllersToResponderChainInAscendingOrder = YES;
     NSInteger respondingViewControllers = [self countOfRespondingViewControllers];
     if (respondingViewControllers != 0) {
         NSLog(@"%@ - Warning: controllers are still present in the responder chain.", [self className]);
+        for (XSViewController *viewController in self.respondingViewControllers) {
+             NSLog(@"Found controller : %@ ", [viewController className]);
+        }
     }
 }
 
