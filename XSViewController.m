@@ -222,9 +222,11 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 
 - (void)removeRespondingChild:(XSViewController *)viewController
 {
-	[self.respondingChildren removeObject:viewController];
-    [viewController detach];
-    [self patchResponderChain];
+    if ([self.respondingChildren containsObject:viewController]) {
+        [self.respondingChildren removeObject:viewController];
+        [viewController detach];
+        [self patchResponderChain];
+    }
 }
 
 - (void)removeAllRespondingChildren
