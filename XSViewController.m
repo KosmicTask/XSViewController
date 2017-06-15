@@ -114,8 +114,39 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 
 - (void)dealloc
 {
-    // this seems prudent given that the superclass on 10.11+
+    // this seems prudent given that the superclass on 10.10+
     // may operate on -nextResponder on dealloc to fixup the responder chain.
+    /*
+     Hmm - looks like we need to be careful here as the 10.10+ support
+     wants to patch the views next responder to self.nextResponder which could cut chunks out of the chain.
+     
+     void -[NSViewController _removeFromResponderChain](void * self, void * _cmd) {
+     r14 = self;
+     if ([self _viewControllerSupports10_10Features] == 0x0) goto .l1;
+     
+     loc_307c3c:
+     r12 = r14->view;
+     rax = [r12 nextResponder];
+     if (rax == 0x0) goto .l1;
+     
+     loc_307c63:
+     rbx = rax;
+     if (rbx == r14) goto loc_307c88;
+     
+     loc_307c6b:
+     rax = [rbx nextResponder];
+     r12 = rbx;
+     if (rax != 0x0) goto loc_307c63;
+     
+     .l1:
+     return;
+     
+     loc_307c88:
+     [r12 setNextResponder:[r14 nextResponder]];
+     return;
+     }
+     */
+#warning it is possible that it would be better to set self.nextResponder = self.proxyViewController.nextResponder here to ensure that the view next responder gets updated correctly.
     self.nextResponder = nil;
 }
 
@@ -125,7 +156,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
 - (void)detach
 {
     self.parent = nil;  // detach from NSViewController tree
-    self.nextResponder = nil; // detach from responder
+    self.nextResponder = nil; // detach from responder chain
     
     [self willChangeValueForKey:@"windowController"];
     _windowController = nil;
