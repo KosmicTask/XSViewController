@@ -61,15 +61,24 @@ static BOOL m_addControllersToResponderChainInAscendingOrder = YES;
 #pragma mark -
 #pragma mark Lifecycle
 
-- (id)initWithWindowNibName:(NSString *)nibName
+- (id)initWithWindow:(NSWindow *)window // designated initialiser
 {
-    self = [super initWithWindowNibName:nibName];
-	
+    self = [super initWithWindow:window];
     if (self) {
         _respondingViewControllers = [NSMutableArray array];
     }
     
-	return self;
+    return self;
+}
+
+- (id)initWithCoder:(NSCoder *)coder // designated initialiser
+{
+    self = [super initWithCoder:coder];
+    if (self) {
+        _respondingViewControllers = [NSMutableArray array];
+    }
+    
+    return self;
 }
 
 - (void)dealloc
