@@ -146,7 +146,7 @@ static BOOL _raiseExceptionForDesignatedInitialiser = NO;
      return;
      }
      */
-#warning it is possible that it would be better to set self.nextResponder = self.proxyViewController.nextResponder here to ensure that the view next responder gets updated correctly.
+    // TODO : it is possible that it would be better to set self.nextResponder = self.proxyViewController.nextResponder here to ensure that the view next responder gets updated correctly.
     self.nextResponder = nil;
 }
 
