@@ -77,6 +77,12 @@ extern NS_ENUM(NSInteger, XSVChainType) {
  */
 - (NSArray *)xsv_actionResponderChainFromSelf;
 
+/*!
+ 
+ Log the responder chain.
+ 
+ */
+- (void)xsv_logResponderChainFromResponder:(NSResponder *)responder;
 
 /*!
  
@@ -92,7 +98,6 @@ extern NS_ENUM(NSInteger, XSVChainType) {
  */
 - (NSArray *)xsv_responderChainFromResponder:(id)initialResponder options:(NSDictionary *)options;
 
-
 /*!
  
  Get the action responder chain above from the given window's controller.
@@ -100,4 +105,18 @@ extern NS_ENUM(NSInteger, XSVChainType) {
  
  */
 - (NSArray *)xsv_actionResponderChainAboveControllerForWindow:(NSWindow *)window;
+
+/*!
+ 
+ Send action to all responders in chain.
+ 
+ */
+- (void)xsv_sendAction:(SEL)action toAllRespondersInChainStartingFrom:(id)target from:(id)sender;
+
+/*
+ 
+ Send action to all responders in chain up to (but not including) the receiver.
+ 
+ */
+- (void)xsv_sendAction:(SEL)action toAllChildRespondersInChainStartingFrom:(id)target from:(id)sender;
 @end

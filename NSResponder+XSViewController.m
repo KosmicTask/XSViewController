@@ -69,7 +69,16 @@ NSString *XSVChainTypeKey = @"ChainType";
 
 - (NSArray *)xsv_actionResponderChainFromResponder:(NSResponder *)responder
 {
-    return [self xsv_responderChainFromResponder:responder options:@{XSVChainTypeKey: @(XSVActionChainType)}];
+    NSArray *responderChain = [self xsv_responderChainFromResponder:responder options:@{XSVChainTypeKey: @(XSVActionChainType)}];
+    
+    BOOL appResponderChainIsValid = [responderChain containsObject:NSApp];
+    
+    if (!appResponderChainIsValid) {
+        DDLogError(@"Application responder chain is incomplete.");
+        [self xsv_logResponderChainFromResponder:self];
+    }
+    
+    return responderChain;
 }
 
 #pragma mark -
@@ -161,4 +170,59 @@ NSString *XSVChainTypeKey = @"ChainType";
 
     return chain;
 }
+
+#pragma mark -
+#pragma mark Action sending
+
+- (void)xsv_sendAction:(SEL)action toAllRespondersInChainStartingFrom:(id)target from:(id)sender
+{
+    // The responder chain is quite delicate and memory access related crashes can occur
+    // on some macOS versions if responders get deallocated while the chain is processing actions.
+    // This has been observed in particular pre 10.13 when calling NSResponder -tryToPerform:
+    // The @autoreleasepool usage here is a precaution.
+    @autoreleasepool {
+        NSArray *responderChain = [self xsv_actionResponderChainFromResponder:target];
+        
+        // send action to target if supported
+        for (NSResponder *responder in responderChain) {
+            if ([responder respondsToSelector:action]) {
+                [NSApp sendAction:action to:target from:sender];
+            }
+        }
+    }
+}
+
+- (void)xsv_sendAction:(SEL)action toAllChildRespondersInChainStartingFrom:(id)target from:(id)sender
+{
+    @autoreleasepool {
+        NSArray *responderChain = [self xsv_actionResponderChainFromResponder:target];
+        
+        // send action to target if supported
+        for (NSResponder *responder in responderChain) {
+            
+            // we are done when the receiver is located
+            if (responder == self) {
+                break;
+            }
+            if ([responder respondsToSelector:action]) {
+                [NSApp sendAction:action to:target from:sender];
+            }
+        }
+    }
+}
+
+#pragma mark -
+#pragma mark Logging
+
+- (void)xsv_logResponderChainFromResponder:(NSResponder *)responder
+{
+    NSArray *responderChain = [self xsv_actionResponderChainFromResponder:responder];
+    
+    NSLog(@"---------------------");
+    for (NSResponder *responder in responderChain)  {
+        NSLog(@"RESPONDER CHAIN ITEM: %@ %@", [responder className], responder);
+    }
+    NSLog(@"---------------------");
+}
+
 @end
