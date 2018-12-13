@@ -115,7 +115,7 @@ NSString *XSVChainTypeKey = @"ChainType";
     responder = [chain lastObject];
     
     // Append action responder chain items
-    if ([options[XSVChainTypeKey] integerValue] == XSVActionChainType) {
+    if ([(NSNumber *)options[XSVChainTypeKey] integerValue] == XSVActionChainType) {
         
         // A window is required
         if (![responder respondsToSelector:@selector(window)]) {
