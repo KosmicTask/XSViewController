@@ -74,7 +74,7 @@ NSString *XSVChainTypeKey = @"ChainType";
     BOOL appResponderChainIsValid = [responderChain containsObject:NSApp];
     
     if (!appResponderChainIsValid) {
-        DDLogError(@"Application responder chain is incomplete.");
+        NSLog(@"Application responder chain is incomplete.");
         //[self xsv_logResponderChainFromResponder:self]; // this can lead to a recursive loop
     }
     
